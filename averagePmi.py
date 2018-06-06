@@ -7,23 +7,10 @@ print '\nAVERAGE.'
 args = argparse.ArgumentParser('Input Parameters.')
 args.add_argument('-iPath', type=str, dest='iPath', help='pmi sorted comments file path.')
 args.add_argument('-oPath', type=str, dest='oPath', help='output file path.')
-args.add_argument('-cmFreqPath', type=str, dest='cmFreqPath', help='comments with frequency file path.')
 args = args.parse_args()
 
 ipFile = open(args.iPath, 'r')
 opFile = open(args.oPath, 'w')
-cFreqFile = open(args.cmFreqPath, 'r')
-
-## get frequency of all comments
-c2f = {}
-for line in cFreqFile:
-    line = line.lstrip()
-    freq = int(line[ : line.find(' ')])
-    comm = line[line.find(' ')+1 : -1] # remove '\n' at tail
-    c2f[comm] = freq
-cFreqFile.close()
-print 'comment frequency loaded.'
-
 
 nowCom = ''
 comCnt = 0
@@ -37,15 +24,14 @@ for line in ipFile:
     else: # new comment: 1) compute avarage pmi; 2) reset data struct.
         if not '' == nowCom:
             avrPmi = sumPmi / comCnt
-            try:
-                opFile.write('%.6f\t%d\t%s\n'%(avrPmi, c2f[nowCom], nowCom))
-            except KeyError, e:
-                print 'KeyError.'
-                print 'comment: ' + str(nowCom)
-                exit()
+            opFile.write('%.4f\t%s\n'%(avrPmi,  nowCom))
         nowCom = com
         comCnt = 1
         sumPmi = pmi
+if not '' == nowCom:
+    avrPmi = sumPmi / comCnt
+    opFile.write('%.6f\t%s\n'%(avrPmi, nowCom))
+
 
 ipFile.close()
 opFile.close()

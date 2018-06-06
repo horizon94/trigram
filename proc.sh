@@ -1,17 +1,16 @@
 #!/bin/bash
 
-VOCSIZE=100
-CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/data.sort.txt.test
+VOCSIZE=400000
+CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/data.sort.txt
 VOCPATH=./statistics/vocab.txt
-BIGRAMPATH=./statistics/bigram.pkl
-UNIGRAMPATH=./statistics/unigram.pkl
 TRIGRAMPATH=./statistics/trigram.pkl
+DEBUG=0
+DEBUG_NUM=10000
+COMMENT_NUM_CUT=10
 
-python vocab.py -iPath $CORPUSPATH -oPath $VOCPATH  -vocSize $VOCSIZE
-
-python ngram.py -iPath $CORPUSPATH -vocPath $VOCPATH -uniGramPath $UNIGRAMPATH -biGramPath $BIGRAMPATH  -triGramPath $TRIGRAMPATH
-
-python computePmi.py -iPath $CORPUSPATH -oPath data.withPmi.txt -vocPath $VOCPATH -uniGramPath $UNIGRAMPATH -biGramPath $BIGRAMPATH -triGramPath $TRIGRAMPATH
+time python vocab.py -iPath $CORPUSPATH -oPath $VOCPATH  -vocSize $VOCSIZE -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT
+time python ngram.py -iPath $CORPUSPATH -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT 
+time python computePmi.py -iPath $CORPUSPATH -oPath data.withPmi.txt -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT
 
 :<<!
 sort -n data.withPmi.txt > data.withPmi.pmiSort.txt

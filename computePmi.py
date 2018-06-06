@@ -16,67 +16,40 @@ def word2id(word, wordDict):
     else:
         return wordDict[unkWord]
 
-def logProbWord(wordId):
-    return math.log(float(id2f[wordId]) / wordFrqSum)
-    #return math.log(float(ug2f[word2id(word, w2id)]) / biGramFrqSum)
-
-def logProbWordGivenWord(wordId, givenWordId):
-    xij = bg2f[(givenWordId,wordId)]
-    xi_ = ug2f[givenWordId]
-    return math.log(float(xij) / xi_)
-
 def logProbWordGivenTwoWords(wIdl, wIdm, wIdr):
     xijk = tg2f[(wIdl, wIdm, wIdr)]
     xij_ = bg2f[(wIdl, wIdm)]
     return math.log(float(xijk) / xij_)
 
-def logProbSentBiGram(sent):
-    words = sent.split()
-    assert 0 < len(words)
-    ids = [word2id(w, w2id) for w in words ]
-    res = 0.0
-    res += logProbWord(ids[0])
-    for i in range(len(ids)-1):
-        res += logProbWordGivenWord(ids[1], ids[0])
-    return res/len(ids)
-
 def logProbSentTriGram(sent):
+    sent = sntHead + sent + sntTail
     words = sent.split()
-    assert 0 < len(words)
-    ids = [word2id(w, w2id) for w in words ]
+    ids = [word2id(w, w2id) for w in words]
     res = 0.0
-    res += logProbWord(ids[0])
-    if 1 < len(words):
-        res += logProbWordGivenWord(ids[1], ids[0])
-    for i in range(len(ids)-2):
+    for i in range(len(ids)-3):
         res += logProbWordGivenTwoWords(ids[i], ids[i+1], ids[i+2])
-    return res/len(ids)
+    return res/(len(ids)-3)
 
-def logProbCommGivenTitlBiGram(w2idL, id2fL, wFrqSumL, xij, xi_, comIdsL):
-    assert 0 < len(comIdsL)
+def logProbCommGivenTitlTriGram(w2idL, ngram, comIdsL):
+    bg2fL, tg2fL = ngram
     res = 0.0
-    res += math.log(float(id2fL[comIdsL[0]]) / wFrqSumL)
-    for i in range(len(comIdsL)-1):
-        res += math.log(float(xij[ comIdsL[0] ][ comIdsL[1] ]) / xi_[comIdsL[0]])
-    return res/len(comIdsL)
-
-def logProbCommGivenTitlTriGram(w2idL, id2fL, wFrqSumL, xij, xi_, comIdsL, tgL):
-    assert 0 < len(comIdsL)
-    res = 0.0
-    res += math.log(float(id2fL[comIdsL[0]]) / wFrqSumL)
-    if 1 < len(comIdsL):
-        res += math.log(float(xij[ comIdsL[0] ][ comIdsL[1] ]) / xi_[comIdsL[0]])
-    for i in range(len(comIdsL)-2):
-        res += math.log(float(tgL[(comIdsL[i], comIdsL[i+1], comIdsL[i+2])]) / xij[ comIdsL[i] ][ comIdsL[i+1] ] )
-    return res/len(comIdsL)
+    for i in range(len(comIdsL)-3):
+        tg2fEle = tg2fL[(comIdsL[i], comIdsL[i+1], comIdsL[i+2])]
+        bg2fEle = bg2fL[(comIdsL[i], comIdsL[i+1])]
+        res += math.log(float(tg2fEle) / bg2fEle )
+    return res/(len(comIdsL)-3)
 
 def staticLittle(corpus):
-    # get vocab
+    # init w2idL, add help words.
     w2idL = {unkWord:0}
-    id2fL = {0:0}
-    wFrqSumL = 0
-    corpusIds = []
     idx = 1
+    helpWords = [frtWord, scdWord, lstWord]
+    for w in helpWords:
+        w2idL[w] = idx
+        idx += 1
+
+    # get w2idL, and trans text corpus to id corpus
+    corpusIds = []
     unkWords = set()
     unkWordsCnt = 0
     for line in corpus:
@@ -85,40 +58,49 @@ def staticLittle(corpus):
         for w in words:
             if w in w2id: # in vocabulary
                 if w in w2idL:
-                    id2fL[w2idL[w]] += 1
                     lineIds.append(w2idL[w])
                 else:
                     w2idL[w] = idx
-                    id2fL[idx] = 1
                     lineIds.append(idx)
                     idx += 1
             else:
-                #id2fL[w2idL[unkWord]] += 1
                 unkWords.add(w)
                 unkWordsCnt += 1
                 lineIds.append(w2idL[unkWord])
+        lineIds = [w2idL[frtWord], w2idL[scdWord]] + lineIds + [w2idL[lstWord]]
         corpusIds.append(lineIds)
-    if len(unkWords) > 0:
-        id2fL[w2idL[unkWord]] += unkWordsCnt / len(unkWords) # use average frequency as <unk> frequency
-    for i in id2fL: wFrqSumL += id2fL[i] 
 
+    # statistic tri-gram
     wNum = len(w2idL)
-    xij = np.array([[0]*wNum]*wNum)
-    tgL = {}
+    bg2fL = {}
+    tg2fL = {}
     for ids in corpusIds:
-        for i in range(len(ids)-2):
-            xij[ ids[i] ][ ids[i+1] ] += 1
+        for i in range(len(ids)-3):
+            bgKey = (ids[i], ids[i+1])
             tgKey = (ids[i], ids[i+1], ids[i+2])
-            if tgKey in tgL: tgL[tgKey] +=  1
-            else: tgL[tgKey] = 1
-        if len(ids) >= 2:
-            xij[ ids[len(ids)-2] ][ ids[len(ids)-1] ] += 1
-    xi_ = xij.sum(axis=1)
-    return w2idL, id2fL, wFrqSumL, xij, xi_, corpusIds, tgL
+            if bgKey in bg2fL:
+                bg2fL[bgKey] += 1
+                if tgKey in tg2fL: tg2fL[tgKey] += 1
+                else: tg2fL[tgKey] = 1
+            else:
+                bg2fL[bgKey] = 1
+                tg2fL[tgKey] = 1
+    return w2idL, (bg2fL, tg2fL), corpusIds
+
+def processOneTitle(nowTitl, nowComs, oFile):
+    w2idL, ngram, corpusIdsL  = staticLittle(nowComs + [nowTitl])
+    for i in range(len(nowComs)):
+        comIdsL = corpusIdsL[i]
+        logPrCmGnTi = logProbCommGivenTitlTriGram(w2idL, ngram, comIdsL)
+        com = nowComs[i]
+        logPrCm = logProbSentTriGram(com)
+        
+        pmi = logPrCmGnTi - logPrCm
+        oFile.write('%.6f\t%.6f\t%.6f\t%s\t%s\n'%(pmi, logPrCmGnTi, logPrCm, nowTitl, com))
 
 
 # main
-print '\nCOMPUTE PMI.'
+print '\n\nCOMPUTE PMI.'
 
 ## params
 args = argparse.ArgumentParser('Input Parameters.')
@@ -128,39 +110,37 @@ args.add_argument('-vocPath', type=str, dest='vocPath', help='vocabulary file pa
 args.add_argument('-biGramPath', type=str, dest='biGramPath', help='bi-gram dump path.')
 args.add_argument('-uniGramPath', type=str, dest='uniGramPath', help='uni-gram dump path.')
 args.add_argument('-triGramPath', type=str, dest='triGramPath', help='tri-gram dump path.')
+args.add_argument('-debug', type=int, dest='debug', help='run as debugging.')
+args.add_argument('-debug_num', type=int, dest='debug_num', help='corpus lines num when debugging.')
+args.add_argument('-com_num_cut', type=int, dest='com_num_cut', help='filter out those titles whose comment num less than this.')
 args = args.parse_args()
 
-wordFrqSum = 0
 w2id = {}
-id2f = {}
-ug2f = {} # unigram, as the form of (wid: freq)
 bg2f = {} # bigram,  as the form of ((w1id, w2id): freq)
 tg2f = {} # trigram,  as the form of ((w1id, w2id, w3id): freq)
 unkWord = '<unk>'
+frtWord = '<s1>'
+scdWord = '<s2>'
+lstWord = '</tail>'
+sntHead = frtWord + ' ' + scdWord + ' '
+sntTail =  ' ' + lstWord
 
 ## load vocabulary, get word to id dict
 vocFile = open(args.vocPath, 'r')
 idx = 0
 for line in vocFile:
-    w,f = line.strip().split('\t')
-    f = int(f)
+    w,_ = line.strip().split('\t')
     w2id[w] = idx
-    wordFrqSum += f
-    id2f[idx] = f
     idx += 1
-print('%d words loaded.' % len(id2f))
+helpWords = [frtWord, scdWord, lstWord]
+for w in helpWords:
+    w2id[w] = idx
+    idx += 1
+print('%d words loaded.' % len(w2id))
 
-## load uni-gram, bi-gram, tri-gram
-uniGramFile = open(args.uniGramPath, 'r')
-ug2f = pickle.load(uniGramFile)
-uniGramFile.close()
-print 'uni-gram loaded.'
-biGramFile = open(args.biGramPath, 'r')
-bg2f = pickle.load(biGramFile)
-biGramFile.close()
-print 'bi-gram loaded.'
-triGramFile = open(args.triGramPath, 'r')
-tg2f = pickle.load(triGramFile)
+## tri-gram
+triGramFile = open(args.triGramPath, 'rb')
+bg2f,tg2f = pickle.load(triGramFile)
 triGramFile.close()
 print 'tri-gram loaded.'
 
@@ -175,28 +155,18 @@ for line in iFile:
     if nowTitl == titl:
         nowComs.append(comm)
     else: # new title
-        ### compute cooccurrence times and occurrence times based on little corpus
-        ### compute and output PMI for every comment
-        ### update struct
-        if not '' == nowTitl:
-            w2idL, id2fL, wFrqSumL, xij, xi_, corpusIdsL, tgL  = staticLittle(nowComs + [nowTitl])
-            for i in range(len(nowComs)):
-                comIdsL = corpusIdsL[i]
-                #logPrCmGnTi = logProbCommGivenTitlBiGram(w2idL, id2fL, wFrqSumL, xij, xi_, comIdsL)
-                logPrCmGnTi = logProbCommGivenTitlTriGram(w2idL, id2fL, wFrqSumL, xij, xi_, comIdsL, tgL)
-
-                com = nowComs[i]
-                logPrCm = logProbSentTriGram(com)
-
-                pmi = logPrCmGnTi - logPrCm
-                oFile.write('%.6f\t%.6f\t%.6f\t%s\t%s\n'%(pmi, logPrCmGnTi, logPrCm, nowTitl, com))
+        if not '' == nowTitl and len(nowComs) >= args.com_num_cut:
+            processOneTitle(nowTitl, nowComs, oFile)
         nowTitl = titl
         nowComs = [comm]
     idxLine += 1
     if 0 == idxLine % 10000:
         sys.stdout.write('%dw lines processed\r' % (idxLine/10000))
         sys.stdout.flush()
-    if idxLine > 1000000: break # debug
+    if 1 == args.debug and idxLine > args.debug_num: break # debug
+if not '' == nowTitl and len(nowComs) >= args.com_num_cut:
+    processOneTitle(nowTitl, nowComs, oFile)
+
 
 iFile.close()
 oFile.close()

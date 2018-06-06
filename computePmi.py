@@ -5,7 +5,7 @@
 
 import sys
 import math
-import pickle
+import cPickle as pickle
 import argparse
 import numpy as np
 

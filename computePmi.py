@@ -108,7 +108,6 @@ args.add_argument('-iPath', type=str, dest='iPath', help='corpus file path.')
 args.add_argument('-oPath', type=str, dest='oPath', help='output file path.')
 args.add_argument('-vocPath', type=str, dest='vocPath', help='vocabulary file path.')
 args.add_argument('-biGramPath', type=str, dest='biGramPath', help='bi-gram dump path.')
-args.add_argument('-uniGramPath', type=str, dest='uniGramPath', help='uni-gram dump path.')
 args.add_argument('-triGramPath', type=str, dest='triGramPath', help='tri-gram dump path.')
 args.add_argument('-debug', type=int, dest='debug', help='run as debugging.')
 args.add_argument('-debug_num', type=int, dest='debug_num', help='corpus lines num when debugging.')
@@ -139,10 +138,20 @@ for w in helpWords:
 print('%d words loaded.' % len(w2id))
 
 ## tri-gram
-triGramFile = open(args.triGramPath, 'rb')
-bg2f,tg2f = pickle.load(triGramFile)
+triGramFile = open(args.triGramPath, 'r')
+for line in triGramFile:
+    w1id,w2id,w3id, f = line.strip().split('\t')
+    tgK = (int(w1id), int(w2id), int(w3id))
+    tg2f[tgK] = int(f)
 triGramFile.close()
 print 'tri-gram loaded.'
+biGramFile = open(args.biGramPath, 'r')
+for line in biGramFile:
+    w1id,w2id, f = line.strip().split('\t')
+    bgK = (int(w1id), int(w2id))
+    bg2f[bgK] = int(f)
+biGramFile.close()
+print 'bi-gram loaded.'
 
 ## compute and output PMI for each <title, comment>
 iFile = open(args.iPath, 'r')

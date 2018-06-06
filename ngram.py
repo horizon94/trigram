@@ -4,7 +4,6 @@
 '''
 
 import sys
-import cPickle as pickle
 import argparse
 
 # functions
@@ -35,6 +34,7 @@ print '\n\nN-GRAM.'
 args = argparse.ArgumentParser('Input Parameters.')
 args.add_argument('-iPath', type=str, dest='iPath', help='corpus file path.')
 args.add_argument('-vocPath', type=str, dest='vocPath', help='vocabulary file path.')
+args.add_argument('-biGramPath', type=str, dest='biGramPath', help='bi-gram dump path.')
 args.add_argument('-triGramPath', type=str, dest='triGramPath', help='tri-gram dump path.')
 args.add_argument('-debug', type=int, dest='debug', help='run as debugging.')
 args.add_argument('-debug_num', type=int, dest='debug_num', help='corpus lines num when debugging.')
@@ -90,15 +90,21 @@ if not '' == nowTitl and len(nowComs) >= args.com_num_cut:
 print
 crpFile.close()
 
-## dump to disk
-triGramFile = open(args.triGramPath, 'wb')
-pickle.dump((bg2f, tg2f), triGramFile, pickle.HIGHEST_PROTOCOL)
+## save to disk as text
+triGramFile = open(args.triGramPath, 'w')
+for tg in tg2f:
+    triGramFile.write('%d\t%d\t%d\t%d\n' % (tg[0], tg[1], tg[2], tg2f[tg]))
 triGramFile.close()
 print 'trigram dumped.'
+biGramFile = open(args.biGramPath, 'w')
+for bg in bg2f:
+    biGramFile.write('%d\t%d\t%d\n' % (bg[0], bg[1], bg2f[bg]))
+biGramFile.close()
+print 'bigram dumped.'
 
 ## debug print
-print 'uni-gram examples:'
 if 1 == args.debug:
+    print 'uni-gram examples:'
     idx = 0
     for tg in tg2f:
         print('(%d,%d,%d) : %d' % (tg[0],tg[1],tg[2], tg2f[tg]))

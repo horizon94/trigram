@@ -13,7 +13,6 @@ time python vocab.py -iPath $CORPUSPATH -oPath $VOCPATH  -vocSize $VOCSIZE -debu
 time python ngram.py -iPath $CORPUSPATH -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT 
 time python computePmi.py -iPath $CORPUSPATH -oPath data.withPmi.txt -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT
 
-:<<!
 sort -n data.withPmi.txt > data.withPmi.pmiSort.txt
 #if [[ $? -eq 0 ]]; then 
 #    rm data.withPmi.txt
@@ -38,4 +37,3 @@ fi
 
 echo
 echo finish.
-!

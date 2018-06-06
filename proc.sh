@@ -7,6 +7,7 @@ TRIGRAMPATH=./statistics/trigram.pkl
 DEBUG=0
 DEBUG_NUM=10000
 COMMENT_NUM_CUT=10
+AVR_ABS=1
 
 time python vocab.py -iPath $CORPUSPATH -oPath $VOCPATH  -vocSize $VOCSIZE -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT
 time python ngram.py -iPath $CORPUSPATH -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT 
@@ -25,7 +26,7 @@ if [[ $? -eq 0 ]]; then
     rm comments.withPmi.txt
 fi
 
-python averagePmi.py -iPath comments.withPmi.sort.txt -oPath comments.avrPmi.txt -cmFreqPath ../../data/comments.freq.sort.txt
+python averagePmi.py -iPath comments.withPmi.sort.txt -oPath comments.avrPmi.txt -abs $AVR_ABS
 if [[ $? -eq 0 ]]; then 
     rm comments.withPmi.sort.txt
 fi

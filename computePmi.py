@@ -50,6 +50,7 @@ def staticLittle(corpus):
 
     # get w2idL, and trans text corpus to id corpus
     corpusIds = []
+    corpusWds = []
     unkWords = set()
     unkWordsCnt = 0
     for line in corpus:
@@ -69,22 +70,53 @@ def staticLittle(corpus):
                 lineIds.append(w2idL[unkWord])
         lineIds = [w2idL[frtWord], w2idL[scdWord]] + lineIds + [w2idL[lstWord]]
         corpusIds.append(lineIds)
+        words = [frtWord, scdWord] + words + [lstWord]
+        corpusWds.append(words)
 
     # statistic tri-gram
     wNum = len(w2idL)
     bg2fL = {}
     tg2fL = {}
-    for ids in corpusIds:
+    unkCmb2NumBg = {}
+    unkCmb2NumTg = {}
+    for lineId in range(len(corpusIds)):
+        ids = corpusIds[lineId]
+        ws = corpusWds[lineId]
         for i in range(len(ids)-3):
             bgKey = (ids[i], ids[i+1])
             tgKey = (ids[i], ids[i+1], ids[i+2])
             if bgKey in bg2fL:
-                bg2fL[bgKey] += 1
-                if tgKey in tg2fL: tg2fL[tgKey] += 1
-                else: tg2fL[tgKey] = 1
+                bg2fL[bgKey] += 1.0
+                if tgKey in tg2fL: tg2fL[tgKey] += 1.0
+                else: tg2fL[tgKey] = 1.0
             else:
-                bg2fL[bgKey] = 1
-                tg2fL[tgKey] = 1
+                bg2fL[bgKey] = 1.0
+                tg2fL[tgKey] = 1.0
+            
+            ## static unk combination
+            if w2idL[unkWord] in bgKey:
+                wsCmbBg = (ws[i], ws[i+1])
+                if bgKey in unkCmb2NumBg:
+                    if not wsCmbBg in unkCmb2NumBg[bgKey]: unkCmb2NumBg[bgKey].add(wsCmbBg)
+                else:
+                    tpSet1 = set()
+                    tpSet1.add(wsCmbBg)
+                    unkCmb2NumBg[bgKey] = tpSet1
+            if w2idL[unkWord] in tgKey:
+                wsCmbTg = (ws[i], ws[i+1], ws[i+2])
+                if tgKey in unkCmb2NumTg:
+                    if not wsCmbTg in unkCmb2NumTg[tgKey]: unkCmb2NumTg[tgKey].add(wsCmbTg)
+                else:
+                    tpSet2 = set()
+                    tpSet2.add(wsCmbTg)
+                    unkCmb2NumTg[tgKey] = tpSet2
+
+    # average unk combination
+    for tgK in unkCmb2NumTg:
+        tg2fL[tgK] = float(tg2fL[tgK]) / len(unkCmb2NumTg[tgK])
+    for bgK in unkCmb2NumBg:
+        bg2fL[bgK] = float(bg2fL[bgK]) / len(unkCmb2NumBg[bgK])
+
     return w2idL, (bg2fL, tg2fL), corpusIds
 
 def processOneTitle(nowTitl, nowComs, oFile):

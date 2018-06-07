@@ -33,6 +33,7 @@ args.add_argument('-debug', type=int, dest='debug', help='run as debugging.')
 args.add_argument('-debug_num', type=int, dest='debug_num', help='corpus lines num when debugging.')
 args.add_argument('-com_num_cut', type=int, dest='com_num_cut', help='filter out those titles whose comment num less than this.')
 args = args.parse_args()
+if 1 == args.debug: args.vocSize = args.debug_num / 10
 
 unkWord = '<unk>'
 w2f = {}

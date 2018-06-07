@@ -22,12 +22,31 @@ def updGramBsSent(sent):
         bgKey = (wids[i], wids[i+1])
         tgKey = (wids[i], wids[i+1], wids[i+2])
         if bgKey in bg2f:
-            bg2f[bgKey] += 1
-            if tgKey in tg2f: tg2f[tgKey] += 1
-            else: tg2f[tgKey] = 1
+            bg2f[bgKey] += 1.0
+            if tgKey in tg2f: tg2f[tgKey] += 1.0
+            else: tg2f[tgKey] = 1.0
         else:
-            bg2f[bgKey] = 1
-            tg2f[tgKey] = 1
+            bg2f[bgKey] = 1.0
+            tg2f[tgKey] = 1.0
+    
+        # static unk combination
+        if w2id[unkWord] in bgKey:
+            wsCmbBg = (ws[i], ws[i+1])
+            if bgKey in unkCmb2NumBg:
+                if not wsCmbBg in unkCmb2NumBg[bgKey]: unkCmb2NumBg[bgKey].add(wsCmbBg)
+            else:
+                tpSet1 = set()
+                tpSet1.add(wsCmbBg)
+                unkCmb2NumBg[bgKey] = tpSet1
+        if w2id[unkWord] in tgKey:
+            wsCmbTg = (ws[i], ws[i+1], ws[i+2])
+            if tgKey in unkCmb2NumTg:
+                if not wsCmbTg in unkCmb2NumTg[tgKey]: unkCmb2NumTg[tgKey].add(wsCmbTg)
+            else:
+                tpSet2 = set()
+                tpSet2.add(wsCmbTg)
+                unkCmb2NumTg[tgKey] = tpSet2
+               
             
 # main
 print '\n\nN-GRAM.'
@@ -44,6 +63,8 @@ args = args.parse_args()
 w2id = {} # id start from 0
 bg2f = {} # bigram,  as the form of ((w1id, w2id): freq)
 tg2f = {}
+unkCmb2NumTg = {}
+unkCmb2NumBg = {}
 unkWord = '<unk>'
 frtWord = '<s1>'
 scdWord = '<s2>'
@@ -89,6 +110,14 @@ if not '' == nowTitl and len(nowComs) >= args.com_num_cut:
         updGramBsSent(sent)
 print
 crpFile.close()
+### average unk combination
+for tgK in unkCmb2NumTg:
+    tg2f[tgK] = float(tg2f[tgK]) / len(unkCmb2NumTg[tgK])
+print 'tg2f averaged.'
+for bgK in unkCmb2NumBg:
+    bg2f[bgK] = float(bg2f[bgK]) / len(unkCmb2NumBg[bgK])
+print 'bg2f averaged.'
+
 
 ## dump to disk
 triGramFile = open(args.triGramPath, 'wb')
@@ -97,15 +126,17 @@ triGramFile.close()
 print 'trigram dumped.'
 
 ## debug print
-print 'uni-gram examples:'
 if 1 == args.debug:
+    print 'uni-gram examples:'
     idx = 0
     for tg in tg2f:
-        print('(%d,%d,%d) : %d' % (tg[0],tg[1],tg[2], tg2f[tg]))
+        if w2id[unkWord] in tg:
+            print('(%d,%d,%d) : %f' % (tg[0],tg[1],tg[2], tg2f[tg]))
         idx += 1
-        if idx > 10: break
+        if idx > 100: break
     idx = 0
     for bg in bg2f:
-        print('(%d,%d) : %d' % (bg[0], bg[1], bg2f[bg]))
+        if w2id[unkWord] in bg:
+            print('(%d,%d) : %f' % (bg[0], bg[1], bg2f[bg]))
         idx += 1
-        if idx > 10: break
+        if idx > 100: break

@@ -7,7 +7,7 @@ print '\n\nAVERAGE.'
 args = argparse.ArgumentParser('Input Parameters.')
 args.add_argument('-iPath', type=str, dest='iPath', help='pmi sorted comments file path.')
 args.add_argument('-oPath', type=str, dest='oPath', help='output file path.')
-args.add_argument('-abs', type=str, dest='abs', help='whether or not use absolute PMI.')
+args.add_argument('-abs', type=int, dest='abs', help='whether or not use absolute PMI.')
 args = args.parse_args()
 
 ipFile = open(args.iPath, 'r')

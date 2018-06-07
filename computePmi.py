@@ -16,10 +16,18 @@ def word2id(word, wordDict):
     else:
         return wordDict[unkWord]
 
+def ngramDiv(up, bl):
+    up = float(up)
+    bl = float(bl)
+    if 0.0 == up:
+        if 0.0 == bl: return 1.0
+        else: return zeroAppr
+    else: return up / bl
+
 def logProbWordGivenTwoWords(wIdl, wIdm, wIdr):
     xijk = tg2f[(wIdl, wIdm, wIdr)]
     xij_ = bg2f[(wIdl, wIdm)]
-    return math.log(float(xijk) / xij_)
+    return math.log(ngramDiv(xijk,xij_))
 
 def logProbSentTriGram(sent):
     sent = sntHead + sent + sntTail
@@ -36,7 +44,7 @@ def logProbCommGivenTitlTriGram(w2idL, ngram, comIdsL):
     for i in range(len(comIdsL)-3):
         tg2fEle = tg2fL[(comIdsL[i], comIdsL[i+1], comIdsL[i+2])]
         bg2fEle = bg2fL[(comIdsL[i], comIdsL[i+1])]
-        res += math.log(float(tg2fEle) / bg2fEle )
+        res += math.log(ngramDiv(tg2fEle,bg2fEle))
     return res/(len(comIdsL)-3)
 
 def staticLittle(corpus):
@@ -156,6 +164,7 @@ scdWord = '<s2>'
 lstWord = '</tail>'
 sntHead = frtWord + ' ' + scdWord + ' '
 sntTail =  ' ' + lstWord
+zeroAppr = 1.0 / 10000
 
 ## load vocabulary, get word to id dict
 vocFile = open(args.vocPath, 'r')

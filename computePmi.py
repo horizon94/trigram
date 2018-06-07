@@ -27,7 +27,7 @@ def ngramDiv(up, bl):
 def logProbWordGivenTwoWords(wIdl, wIdm, wIdr):
     xijk = 0.0
     xij_ = 0.0
-    if (wIdl, wIdm, wIdr) in tg2f
+    if (wIdl, wIdm, wIdr) in tg2f:
         xijk = tg2f[(wIdl, wIdm, wIdr)]
     if (wIdl, wIdm) in bg2f:
         xij_ = bg2f[(wIdl, wIdm)]

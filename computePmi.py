@@ -25,8 +25,12 @@ def ngramDiv(up, bl):
     else: return up / bl
 
 def logProbWordGivenTwoWords(wIdl, wIdm, wIdr):
-    xijk = tg2f[(wIdl, wIdm, wIdr)]
-    xij_ = bg2f[(wIdl, wIdm)]
+    xijk = 0.0
+    xij_ = 0.0
+    if (wIdl, wIdm, wIdr) in tg2f
+        xijk = tg2f[(wIdl, wIdm, wIdr)]
+    if (wIdl, wIdm) in bg2f:
+        xij_ = bg2f[(wIdl, wIdm)]
     return math.log(ngramDiv(xijk,xij_))
 
 def logProbSentTriGram(sent):
@@ -42,8 +46,12 @@ def logProbCommGivenTitlTriGram(w2idL, ngram, comIdsL):
     bg2fL, tg2fL = ngram
     res = 0.0
     for i in range(len(comIdsL)-3):
-        tg2fEle = tg2fL[(comIdsL[i], comIdsL[i+1], comIdsL[i+2])]
-        bg2fEle = bg2fL[(comIdsL[i], comIdsL[i+1])]
+        tg2fEle = 0.0
+        bg2fEle = 0.0
+        if (comIdsL[i], comIdsL[i+1], comIdsL[i+2]) in tg2fL:
+            tg2fEle = tg2fL[(comIdsL[i], comIdsL[i+1], comIdsL[i+2])]
+        if (comIdsL[i], comIdsL[i+1]) in bg2fL:
+            bg2fEle = bg2fL[(comIdsL[i], comIdsL[i+1])]
         res += math.log(ngramDiv(tg2fEle,bg2fEle))
     return res/(len(comIdsL)-3)
 

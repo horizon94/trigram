@@ -1,23 +1,24 @@
 #!/bin/bash
 
 VOCSIZE=400000
-#CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/data.sort.txt
+CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/data.sort.txt
 #CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/scored/data.scrd.fltd.sort.txt
 #CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/gene_test/gene.test
-CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/gene_test/gene.test.lm
+#CORPUSPATH=/home/tiwe/t-chtian/dataClean/data/gene_test/gene.test.lm
 VOCPATH=./statistics/vocab.txt
 TRIGRAMPATH=./statistics/trigram.pkl
 DEBUG=0
 DEBUG_NUM=10000
-COMMENT_NUM_CUT=10
+COMMENT_NUM_CUT=0
 AVR_ABS=1
-LAMDA=2.0
+LAMDA=3.0
 
 #time python vocab.py -iPath $CORPUSPATH -oPath $VOCPATH  -vocSize $VOCSIZE -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT
 #time python ngram.py -iPath $CORPUSPATH -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT 
 #time python computePmi.py -iPath $CORPUSPATH -oPath data.withPmi.txt -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -com_num_cut $COMMENT_NUM_CUT
 time python computePmiUsLm.py -iPath $CORPUSPATH -oPath data.withPmi.txt -vocPath $VOCPATH -triGramPath $TRIGRAMPATH -debug $DEBUG -debug_num $DEBUG_NUM -lamda $LAMDA
 
+:<<!
 sort -t $'\t' -k4,4 -k1n,1 data.withPmi.txt > data.withPmi.titlGrouped.txt
 
 sort -n data.withPmi.txt > data.withPmi.pmiSort.txt
@@ -44,3 +45,4 @@ fi
 
 echo
 echo finish.
+!

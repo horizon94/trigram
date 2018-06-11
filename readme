@@ -1,6 +1,7 @@
 vocab.py
 ngram.py
 computePmi.py
+computePmiUsLm.py
 averagePmi.py
 proc.sh
 statistics

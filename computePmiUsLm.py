@@ -10,6 +10,12 @@ import argparse
 import numpy as np
 
 # functions
+def word2id(word, wordDict):
+    if word in wordDict:
+        return wordDict[word]
+    else:
+        return wordDict[unkWord]
+
 def probWordNKSM(wid):
     n_j = 0
     if wid in ug2nR:
@@ -68,7 +74,7 @@ def logProbWordGivenTwoWordsNKSM(widl, widm, widr):
 def logProbSentTriGram(sent):
     sent = sntHead + sent + sntTail
     words = sent.split()
-    ids = [w2id[w] for w in words]
+    ids = [word2id(w, w2id) for w in words]
     res = 0.0
     for i in range(len(ids)-2):
         res += logProbWordGivenTwoWordsNKSM(ids[i], ids[i+1], ids[i+2])
@@ -148,8 +154,9 @@ print('%d words loaded.' % len(w2id))
 triGramFile = open(args.triGramPath, 'rb')
 ug2f,bg2f,tg2f,ug2n,ug2nR,bg2n = pickle.load(triGramFile)
 triGramFile.close()
-for ug in ug2n:
-    bgNum += ug2n[ug]
+#for ug in ug2n:
+#    bgNum += ug2n[ug]
+bgNum = len(bg2f)
 bgD1, bgD2, bgD3 = defaultDelta(bg2f)
 tgD1, tgD2, tgD3 = defaultDelta(tg2f)
 print 'tri-gram loaded.'

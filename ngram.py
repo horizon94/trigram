@@ -171,20 +171,26 @@ print
 crpFile.close()
 ### average unk combination
 if not 0 == len(unkWordSet): 
-    ug2f[w2id[unkWord]] = ug2f[w2id[unkWord]] / len(unkWordSet) 
+    ug2f[w2id[unkWord]] = float(ug2f[w2id[unkWord]]) / len(unkWordSet) 
 for tgK in unkCmb2NumTg:
     tg2f[tgK] = float(tg2f[tgK]) / len(unkCmb2NumTg[tgK])
-print 'tg2f unk averaged.'
 for bgK in unkCmb2NumBg:
     bg2f[bgK] = float(bg2f[bgK]) / len(unkCmb2NumBg[bgK])
-print 'bg2f unk averaged.'
-### get ngram to num
+print 'ug2f, bg2f and tg2f <unk> refered items averaged.'
+
+### get ngram to num, and average unk combination
 for ng in ug2ws:
-    ug2n[ng] = len(ug2ws[ng])
+    ug2n[ng] = float(len(ug2ws[ng]))
 for ng in ug2wsR:
-    ug2nR[ng] = len(ug2wsR[ng])
+    ug2nR[ng] = float(len(ug2wsR[ng]))
 for ng in bg2ws:
-    bg2n[ng] = len(bg2ws[ng])
+    bg2n[ng] = float(len(bg2ws[ng]))
+if not 0 == len(unkWordSet):
+    ug2n[w2id[unkWord]]  = float(ug2n[w2id[unkWord]])  / len(unkWordSet)
+    ug2nR[w2id[unkWord]] = float(ug2nR[w2id[unkWord]]) / len(unkWordSet)
+for bgK in unkCmb2NumBg:
+    bg2n[bgK] = float(bg2n[bgK]) / len(unkCmb2NumBg[bgK])
+print 'ug2n, ug2nR and bg2n <unk> refered items averaged.'
 
 ## dump to disk
 triGramFile = open(args.triGramPath, 'wb')

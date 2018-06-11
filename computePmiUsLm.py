@@ -28,7 +28,7 @@ def probWordGivenWordNKSM(widl, widr):
     xij = 0.0
     xi_ = 0.0
     ugKey = widl
-    bgKey = widr
+    bgKey = (widl, widr)
     if bgKey in bg2f:
         xij = bg2f[bgKey]
     if ugKey in ug2f:

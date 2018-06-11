@@ -10,14 +10,6 @@ import argparse
 import numpy as np
 
 # functions
-def ngramDiv(up, bl):
-    up = float(up)
-    bl = float(bl)
-    if 0.0 == up:
-        if 0.0 == bl: return 1.0
-        else: return zeroAppr
-    else: return up / bl
-
 def probWordNKSM(wid):
     n_j = 0
     if wid in ug2nR:
@@ -35,14 +27,17 @@ def probWordGivenWordNKSM(widl, widr):
         xij = bg2f[bgKey]
     if ugKey in ug2f:
         xi_ = ug2f[ugKey]
-    assert not 0.0 == xi_
-    # asset: 0.0 == xi_ will not happen
-    #        because unkown words is seen as <unk>
     ni_ = 0
     if ugKey in ug2n:
         ni_ = ug2n[ugKey]
-    cndProbDisd = max(xij-deltaBg, 0) / xi_
-    lmda = args.deltaBg * ni_ / xi_
+    if   2.0 >  xij                : delta = bgD1
+    elif 2.0 <= xij and 3.0 > xij  : delta = bgD2
+    elif 3.0 <= xij                : delta = bgD3
+    cndProbDisd = 0.0
+    lmda = 1.0
+    if not 0.0 == xi_:
+        cndProbDisd = max(xij-delta, 0) / xi_
+        lmda = delta * ni_ / xi_
     res = cndProbDisd + lmda * probWordNKSM(widr)
     return res
 
@@ -58,11 +53,14 @@ def logProbWordGivenTwoWordsNKSM(widl, widm, widr):
     nij_ = 0
     if bgKey in bg2n:
         nij_ = bg2n[bgKey]
-    assert not 0.0 == xij_
-    # question: what about xij_ is 0.0
-    #           which means no such combinaton <wi, wj>  occurs in the ngram.
-    cndProbDisd = max(xijk-deltaTg, 0) / xij_
-    lmda = deltaTg * nij_ / xij_
+    if   2.0 >  xijk                : delta = tgD1
+    elif 2.0 <= xijk and 3.0 > xijk : delta = tgD2
+    elif 3.0 <= xijk                : delta = tgD3
+    cndProbDisd = 0.0
+    lmda = 1.0
+    if not 0.0 == xij_: 
+        cndProbDisd = max(xijk-delta, 0) / xij_
+        lmda = delta * nij_ / xij_
     res = cndProbDisd + lmda * probWordGivenWordNKSM(widm, widr)
     assert not 0.0 == res
     return math.log(res)
@@ -82,24 +80,26 @@ def processOneComment(titl, comm, score):
     pmi = logPrCmGnTi - args.lamda * logPrCm
     oFile.write('%.6f\t%.6f\t%.6f\t%s\t%s\n'%(pmi, logPrCmGnTi, logPrCm, titl, comm))
 
-def defaultDelta():
-    tgn1 = 0
-    tgn2 = 0
-    bgn1 = 0
-    bgn2 = 0
-    for bg in bg2f:
-        if 1.0 == bg2f[bg]:
-            bgn1 += 1
-        elif 2.0 == bg2f[bg]:
-            bgn2 += 1
-    for tg in tg2f:
-        if 1.0 == tg2f[tg]:
-            tgn1 += 1
-        elif 2.0 == tg2f[tg]:
-            tgn2 == 1
-    deltaBg = float(bgn1) / (bgn1 + 2*bgn2)
-    deltaTg = float(tgn1) / (tgn1 + 2*tgn2)
-    return deltaBg, deltaTg
+def defaultDelta(ng2f):
+    n1 = 0
+    n2 = 0
+    n3 = 0
+    n4 = 0
+    for ng in ng2f:
+        if 1.0 == ng2f[ng]:
+            n1 += 1
+        elif 2.0 == ng2f[ng]:
+            n2 += 1
+        elif 3.0 == ng2f[ng]:
+            n3 += 1
+        elif 4.0 == ng2f[ng]:
+            n4 += 1
+    Y = float(n1) / (n1 + 2*n2)
+    D1 = 1 - 2*Y*(float(n2) / n1)
+    D2 = 2 - 3*Y*(float(n3) / n2)
+    D3 = 3 - 4*Y*(float(n4) / n3)
+    return D1, D2, D3
+
 
 # main
 print '\n\nCOMPUTE PMI.'
@@ -150,13 +150,15 @@ ug2f,bg2f,tg2f,ug2n,ug2nR,bg2n = pickle.load(triGramFile)
 triGramFile.close()
 for ug in ug2n:
     bgNum += ug2n[ug]
-deltaBg,deltaTg = defaultDelta()
+bgD1, bgD2, bgD3 = defaultDelta(bg2f)
+tgD1, tgD2, tgD3 = defaultDelta(tg2f)
 print 'tri-gram loaded.'
 
 ## notification
-print('lambda: %f' % args.lamda)
-print('KN smoothing, delta of bi-gram: %f' % deltaBg)
-print('KN smoothing, delta of tri-gram: %f' % deltaTg)
+print('lambda: %.2f' % args.lamda)
+print 'Kneser-Ney smoothing used.'
+print('discount for bi-gram,  D1: %.4f, D2: %.4f, D3: %.4f.' % (bgD1, bgD2, bgD3))
+print('discount for tri-gram, D1: %.4f, D2: %.4f, D3: %.4f.' % (tgD1, tgD2, tgD3))
 
 ## compute and output PMI for each <title, comment>
 iFile = open(args.iPath, 'r')

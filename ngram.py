@@ -33,7 +33,8 @@ def updGramBsSent(sent):
         if w2id[unkWord] in bgKey:
             wsCmbBg = (ws[i], ws[i+1])
             if bgKey in unkCmb2NumBg:
-                if not wsCmbBg in unkCmb2NumBg[bgKey]: unkCmb2NumBg[bgKey].add(wsCmbBg)
+                if not wsCmbBg in unkCmb2NumBg[bgKey]: 
+                    unkCmb2NumBg[bgKey].add(wsCmbBg)
             else:
                 tpSet1 = set()
                 tpSet1.add(wsCmbBg)
